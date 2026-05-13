@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Générateur de télex</title>
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --card: #ffffff;
+      --text: #18181b;
+      --muted: #71717a;
+      --border: #d4d4d8;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --success: #16a34a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ffffff;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: #e4e4e7;
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    #resultat {
+      min-height: 480px;
+      white-space: pre-wrap;
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .message {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+
+    .message.success {
+      color: var(--success);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 850px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>Générateur de télex</h1>
+      <p class="subtitle">Version de travail avec intitulés fictifs. Les champs pourront être renommés facilement.</p>
+    </header>
+
+    <section class="layout">
+      <div class="card">
+        <h2>Saisie des informations</h2>
+
+        <div class="field">
+          <label for="dateEvenement">Date de l'évènement *</label>
+          <input type="date" id="dateEvenement" />
+        </div>
+
+        <div class="field">
+          <label for="heureEvenement">Heure de l'évènement *</label>
+          <input type="time" id="heureEvenement" />
+        </div>
+
+        <div class="field">
+          <label for="lieuEvenement">Lieu / adresse *</label>
+          <input type="text" id="lieuEvenement" placeholder="Ex. : 12 rue fictive, 69000 Lyon" />
+          <p class="hint">L'autocomplétion d'adresse pourra être ajoutée plus tard.</p>
+        </div>
+
+        <div class="field">
+          <label for="typeEvenement">Type d'évènement *</label>
+          <input type="text" id="typeEvenement" placeholder="Ex. : incident, intervention, constat..." />
+        </div>
+
+        <div class="field">
+          <label for="personnesConcernees">Personnes concernées *</label>
+          <textarea id="personnesConcernees" placeholder="Ex. : identité, rôle, service, témoin..."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="faitsConstates">Faits constatés *</label>
+          <textarea id="faitsConstates" placeholder="Décrire les faits de manière factuelle."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="actionsMenees">Actions menées *</label>
+          <textarea id="actionsMenees" placeholder="Indiquer les actions réalisées, démarches, contacts, mesures prises..."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="suiteDonnee">Suite donnée *</label>
+          <textarea id="suiteDonnee" placeholder="Indiquer la suite prévue ou les informations transmises."></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn-secondary" type="button" onclick="remplirDateHeure()">Date / heure actuelles</button>
+          <button class="btn-primary" type="button" onclick="genererTelex()">Générer le télex</button>
+          <button class="btn-danger" type="button" onclick="reinitialiserFormulaire()">Réinitialiser</button>
+        </div>
+
+        <div id="message" class="message"></div>
+      </div>
+
+      <div class="card">
+        <h2>Texte généré</h2>
+        <textarea id="resultat" readonly placeholder="Le télex généré apparaîtra ici."></textarea>
+
+        <div class="actions">
+          <button class="btn-success" type="button" onclick="copierTelex()">Copier le texte</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const champsObligatoires = [
+      "dateEvenement",
+      "heureEvenement",
+      "lieuEvenement",
+      "typeEvenement",
+      "personnesConcernees",
+      "faitsConstates",
+      "actionsMenees",
+      "suiteDonnee"
+    ];
+
+    function getValeur(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function afficherMessage(texte, type) {
+      const message = document.getElementById("message");
+      message.textContent = texte;
+      message.className = "message " + type;
+    }
+
+    function formatDate(dateIso) {
+      if (!dateIso) return "";
+      const [annee, mois, jour] = dateIso.split("-");
+      return `${jour}/${mois}/${annee}`;
+    }
+
+    function verifierChampsObligatoires() {
+      const champsManquants = champsObligatoires.filter(id => getValeur(id) === "");
+
+      if (champsManquants.length > 0) {
+        afficherMessage("Tous les champs obligatoires doivent être renseignés.", "error");
+        return false;
+      }
+
+      return true;
+    }
+
+    function genererTelex() {
+      if (!verifierChampsObligatoires()) return;
+
+      const dateEvenement = formatDate(getValeur("dateEvenement"));
+      const heureEvenement = getValeur("heureEvenement");
+      const lieuEvenement = getValeur("lieuEvenement");
+      const typeEvenement = getValeur("typeEvenement");
+      const personnesConcernees = getValeur("personnesConcernees");
+      const faitsConstates = getValeur("faitsConstates");
+      const actionsMenees = getValeur("actionsMenees");
+      const suiteDonnee = getValeur("suiteDonnee");
+
+      const telex = `DATE : ${dateEvenement}\nHEURE : ${heureEvenement}\nLIEU : ${lieuEvenement}\nTYPE D'EVENEMENT : ${typeEvenement}\nPERSONNES CONCERNEES : ${personnesConcernees}\nFAITS CONSTATES : ${faitsConstates}\nACTIONS MENEES : ${actionsMenees}\nSUITE DONNEE : ${suiteDonnee}`;
+
+      document.getElementById("resultat").value = telex.toUpperCase();
+      afficherMessage("Télex généré.", "success");
+    }
+
+    async function copierTelex() {
+      const resultat = document.getElementById("resultat").value;
+
+      if (!resultat.trim()) {
+        afficherMessage("Aucun télex à copier.", "error");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(resultat);
+        afficherMessage("Texte copié dans le presse-papiers.", "success");
+      } catch (error) {
+        document.getElementById("resultat").select();
+        afficherMessage("Copie automatique impossible. Le texte est sélectionné : utilise Ctrl + C.", "error");
+      }
+    }
+
+    function reinitialiserFormulaire() {
+      champsObligatoires.forEach(id => {
+        document.getElementById(id).value = "";
+      });
+
+      document.getElementById("resultat").value = "";
+      afficherMessage("Formulaire réinitialisé.", "success");
+    }
+
+    function remplirDateHeure() {
+      const maintenant = new Date();
+      const annee = maintenant.getFullYear();
+      const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
+      const jour = String(maintenant.getDate()).padStart(2, "0");
+      const heures = String(maintenant.getHours()).padStart(2, "0");
+      const minutes = String(maintenant.getMinutes()).padStart(2, "0");
+
+      document.getElementById("dateEvenement").value = `${annee}-${mois}-${jour}`;
+      document.getElementById("heureEvenement").value = `${heures}:${minutes}`;
+      afficherMessage("Date et heure actuelles renseignées.", "success");
+    }
+  </script>
+</body>
+</html>

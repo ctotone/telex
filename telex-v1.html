@@ -6,15 +6,41 @@
   <title>Générateur de télex</title>
   <style>
     :root {
+      --bg: #111827;
+      --card: #1f2937;
+      --text: #f9fafbde;
+      --muted: #9ca3af;
+      --border: #374151;
+      --input-bg: #111827;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --suggestion-hover: #374151;
+      --valid-bg: #1f3328;
+      --valid-border: #4b6f5a;
+      --empty-bg: #3f1d1d;
+      --empty-border: #f87171;
+      --error-bg: #450a0a;
+    }
+
+    body.theme-clair {
       --bg: #f4f4f5;
       --card: #ffffff;
       --text: #18181b;
       --muted: #71717a;
       --border: #d4d4d8;
+      --input-bg: #ffffff;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
       --danger: #dc2626;
       --success: #16a34a;
+      --suggestion-hover: #eff6ff;
+      --valid-bg: #f0fdf4;
+      --valid-border: #16a34a;
+      --empty-bg: #fff7f7;
+      --empty-border: #fca5a5;
+      --error-bg: #fef2f2;
     }
 
     * {
@@ -30,13 +56,21 @@
     }
 
     .page {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px;
     }
 
     header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
       margin-bottom: 24px;
+    }
+
+    .theme-toggle {
+      white-space: nowrap;
     }
 
     h1 {
@@ -51,7 +85,7 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1.5fr;
       gap: 24px;
     }
 
@@ -72,6 +106,17 @@
       margin-bottom: 14px;
     }
 
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .adresse-wrapper,
+    .suggestion-wrapper {
+      position: relative;
+    }
+
     label {
       display: block;
       margin-bottom: 5px;
@@ -87,32 +132,120 @@
       border-radius: 8px;
       font-size: 15px;
       font-family: Arial, Helvetica, sans-serif;
-      background: #ffffff;
+      background: var(--input-bg);
+      color: var(--text);
+    }
+
+    input.champ-valide,
+    textarea.champ-valide,
+    select.champ-valide {
+      border: 1px solid var(--valid-border);
+      background: var(--valid-bg);
+    }
+
+    input.champ-vide,
+    textarea.champ-vide,
+    select.champ-vide {
+      border: 1px solid var(--empty-border);
+      background: var(--empty-bg);
+    }
+
+    input.champ-erreur,
+    textarea.champ-erreur,
+    select.champ-erreur {
+      border: 2px solid var(--danger);
+      background: var(--error-bg);
     }
 
     textarea {
-      min-height: 110px;
+      min-height: 100px;
       resize: vertical;
+    }
+
+    textarea.compact {
+      min-height: 42px;
+    }
+
+    .effectifs-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .effectif-line {
+      display: grid;
+      grid-template-columns: 1fr 160px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .effectif-line.masque {
+      display: none;
+    }
+
+    .effectif-line label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .suggestions-adresse,
+    .suggestions-effectifs {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      margin-top: 4px;
+      padding: 6px;
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .suggestion-adresse,
+    .suggestion-effectif {
+      padding: 9px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .suggestion-adresse:hover,
+    .suggestion-adresse.active,
+    .suggestion-effectif:hover,
+    .suggestion-effectif.active {
+      background: var(--suggestion-hover);
+    }
+
+    .suggestion-vide {
+      padding: 9px 10px;
+      color: var(--muted);
+      font-size: 14px;
     }
 
     .actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 18px;
+      margin: 18px 0;
     }
 
     button {
       border: none;
       border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 15px;
+      padding: 5px 8px;
+      font-size: 13px;
       cursor: pointer;
       font-weight: bold;
     }
 
     .btn-primary {
-      background: var(--primary);
+      background: #3b82f69e;
       color: white;
     }
 
@@ -121,22 +254,37 @@
     }
 
     .btn-secondary {
-      background: #e4e4e7;
+      background: var(--border);
       color: var(--text);
     }
 
     .btn-danger {
-      background: var(--danger);
+      background: #ef44449e;
       color: white;
     }
 
     .btn-success {
-      background: var(--success);
+      background: #22c55e9e;
+      color: white;
+    }
+
+    body.theme-clair .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    body.theme-clair .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    body.theme-clair .btn-success {
+      background: #16a34a;
       color: white;
     }
 
     #resultat {
-      min-height: 480px;
+      min-height: 620px;
       white-space: pre-wrap;
       font-family: Consolas, "Courier New", monospace;
     }
@@ -162,7 +310,9 @@
     }
 
     @media (max-width: 850px) {
-      .layout {
+      .layout,
+      .field-grid,
+      .effectif-line {
         grid-template-columns: 1fr;
       }
     }
@@ -171,53 +321,109 @@
 <body>
   <main class="page">
     <header>
-      <h1>Générateur de télex</h1>
-      <p class="subtitle">Version de travail avec intitulés fictifs. Les champs pourront être renommés facilement.</p>
+      <div>
+        <h1>Générateur de télex</h1>
+        <p class="subtitle">Version de travail. Le rendu final est généré en texte brut et en majuscules.</p>
+      </div>
+      <button class="btn-secondary theme-toggle" type="button" onclick="basculerTheme()" id="themeToggle">Thème clair</button>
     </header>
 
     <section class="layout">
       <div class="card">
         <h2>Saisie des informations</h2>
 
+        <div class="actions">
+          <button class="btn-secondary" type="button" onclick="remplirDateHeure()">Date / heure actuelles</button>
+          <button class="btn-primary" type="button" onclick="genererTelex()">Générer le télex</button>
+          <button class="btn-danger" type="button" onclick="reinitialiserFormulaire()">Réinitialiser</button>
+        </div>
+
         <div class="field">
-          <label for="dateEvenement">Date de l'évènement *</label>
+          <label for="objetTelex">Objet *</label>
+          <textarea id="objetTelex" placeholder="Objet du télex."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="dateEvenement">Date *</label>
           <input type="date" id="dateEvenement" />
         </div>
 
-        <div class="field">
-          <label for="heureEvenement">Heure de l'évènement *</label>
-          <input type="time" id="heureEvenement" />
+        <div class="field adresse-wrapper">
+          <label for="lieuEvenement">Adresse *</label>
+          <input type="text" id="lieuEvenement" placeholder="Ex. : Place Bellecour, 69002 Lyon" autocomplete="off" />
+          <div id="suggestionsAdresse" class="suggestions-adresse"></div>
         </div>
 
         <div class="field">
-          <label for="lieuEvenement">Lieu / adresse *</label>
-          <input type="text" id="lieuEvenement" placeholder="Ex. : 12 rue fictive, 69000 Lyon" />
-          <p class="hint">L'autocomplétion d'adresse pourra être ajoutée plus tard.</p>
+          <label for="precisionLieu">Précision sur le lieu</label>
+          <input type="text" id="precisionLieu" placeholder="Ex. : TJ Lyon, Rectorat, ARS..." />
+          <p class="hint">Champ facultatif. Si renseigné, il sera ajouté après l'adresse dans le télex final.</p>
         </div>
 
         <div class="field">
-          <label for="typeEvenement">Type d'évènement *</label>
-          <input type="text" id="typeEvenement" placeholder="Ex. : incident, intervention, constat..." />
+          <label for="circonstancesEvenement">Circonstances motivant l'événement *</label>
+          <textarea id="circonstancesEvenement" placeholder="Décrire les circonstances ayant motivé l'événement."></textarea>
         </div>
 
         <div class="field">
-          <label for="personnesConcernees">Personnes concernées *</label>
-          <textarea id="personnesConcernees" placeholder="Ex. : identité, rôle, service, témoin..."></textarea>
+          <label for="typeEvenement">Type d'événement *</label>
+          <textarea id="typeEvenement" placeholder="Déroulé de l'événement"></textarea>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="heureDebut">Heure de début *</label>
+            <input type="time" id="heureDebut" />
+          </div>
+
+          <div class="field">
+            <label for="heureFin">Heure de fin *</label>
+            <input type="time" id="heureFin" />
+          </div>
         </div>
 
         <div class="field">
-          <label for="faitsConstates">Faits constatés *</label>
-          <textarea id="faitsConstates" placeholder="Décrire les faits de manière factuelle."></textarea>
+          <label for="organisateur">Organisateur *</label>
+          <input type="text" id="organisateur" placeholder="Nom de l'organisateur." />
         </div>
 
         <div class="field">
-          <label for="actionsMenees">Actions menées *</label>
-          <textarea id="actionsMenees" placeholder="Indiquer les actions réalisées, démarches, contacts, mesures prises..."></textarea>
+          <label>Effectifs - nombre de fonctionnaires - H/F *</label>
+          <div id="effectifsContainer" class="effectifs-container"></div>
+
+        </div>
+
+        <input type="hidden" id="emploiEffectifs" />
+
+        <div class="field">
+          <label for="participantsManifestation">Nombre de manifestants *</label>
+          <textarea id="participantsManifestation" class="compact" rows="1"></textarea>
         </div>
 
         <div class="field">
-          <label for="suiteDonnee">Suite donnée *</label>
-          <textarea id="suiteDonnee" placeholder="Indiquer la suite prévue ou les informations transmises."></textarea>
+          <label for="contentieuxOperation">Contentieux de l'opération *</label>
+          <textarea id="contentieuxOperation" class="compact" rows="1">NÉANT</textarea>
+        </div>
+
+        <div class="field">
+          <label for="comportementUnites">Comportement des unités engagées *</label>
+          <textarea id="comportementUnites" class="compact" rows="1">BON, CONFORME À LA MISSION</textarea>
+        </div>
+
+        <div class="field">
+          <label for="observationsMateriel">Observations concernant le matériel *</label>
+          <textarea id="observationsMateriel" class="compact" rows="1">NÉANT</textarea>
+        </div>
+
+        <div class="field">
+          <label for="redacteurTelex">Rédacteur *</label>
+          <select id="redacteurTelex">
+            <option value="">Sélectionner un rédacteur</option>
+            <option value="Rédacteur 1">MAJOR VALGALIER</option>
+            <option value="Rédacteur 2">GPX ASTRUC</option>
+            <option value="Rédacteur 3">GPX MERCHADOU</option>
+            <option value="Rédacteur 4">GPX BAZIN</option>
+          </select>
         </div>
 
         <div class="actions">
@@ -230,8 +436,8 @@
       </div>
 
       <div class="card">
-        <h2>Texte généré</h2>
-        <textarea id="resultat" readonly placeholder="Le télex généré apparaîtra ici."></textarea>
+        <h2>Télex final</h2>
+        <textarea id="resultat" spellcheck="true" lang="fr" placeholder="Le télex généré apparaîtra ici."></textarea>
 
         <div class="actions">
           <button class="btn-success" type="button" onclick="copierTelex()">Copier le texte</button>
@@ -241,70 +447,485 @@
   </main>
 
   <script>
-    const champsObligatoires = [
-      "dateEvenement",
-      "heureEvenement",
-      "lieuEvenement",
-      "typeEvenement",
-      "personnesConcernees",
-      "faitsConstates",
-      "actionsMenees",
-      "suiteDonnee"
+    var MAX_LIGNES_EFFECTIFS = 10;
+
+    var typesEffectifsReference = [
+      { nom: "AUTORITÉS + CHAUFFEURS", emploi: "DSO", ordre: 1, alias: ["autorite", "autorites", "autorité", "autorités", "dso", "chauffeur", "chauffeurs"] },
+      { nom: "SDSP/ELI", emploi: "LIAISON ORGANISATEURS ET INFORMATION DU COMMANDEMENT", ordre: 2, alias: ["eli", "sdsp eli", "sdsp/eli"] },
+      { nom: "SDSP/CDI", emploi: "SÉCURISATION DE L'ÉVÉNEMENT", ordre: 3, alias: ["cdi", "sdsp cdi", "sdsp/cdi"] },
+      { nom: "SDSP/BMSRD", emploi: "GESTION CIRCULATION ET COUPURES SI NÉCESSAIRES", ordre: 4, alias: ["circulation", "motard", "motards", "bmsrd", "sdsp bmsrd", "sdsp/bmsrd"] },
+      { nom: "SDRT", emploi: "PHYSIONOMIE ET COMPTAGE", ordre: 5, alias: ["rt", "sdrt", "renseignement", "renseignements"] }
     ];
+
+    var champsObligatoires = [
+      "objetTelex",
+      "dateEvenement",
+      "lieuEvenement",
+      "circonstancesEvenement",
+      "typeEvenement",
+      "heureDebut",
+      "heureFin",
+      "organisateur",
+      "participantsManifestation",
+      "contentieuxOperation",
+      "comportementUnites",
+      "observationsMateriel",
+      "redacteurTelex"
+    ];
+
+    var valeursParDefaut = {
+      contentieuxOperation: "NÉANT",
+      comportementUnites: "BON, CONFORME À LA MISSION",
+      observationsMateriel: "NÉANT"
+    };
+
+    var libellesChamps = {
+      objetTelex: "Objet",
+      dateEvenement: "Date",
+      lieuEvenement: "Adresse",
+      circonstancesEvenement: "Circonstances motivant l'événement",
+      typeEvenement: "Type d'événement",
+      heureDebut: "Heure de début",
+      heureFin: "Heure de fin",
+      organisateur: "Organisateur",
+      participantsManifestation: "Nombre de manifestants",
+      contentieuxOperation: "Contentieux de l'opération",
+      comportementUnites: "Comportement des unités engagées",
+      observationsMateriel: "Observations concernant le matériel",
+      redacteurTelex: "Rédacteur"
+    };
+
+    var delaiRechercheAdresse = null;
+    var indexSuggestionAdresseActive = -1;
+    var suggestionsAdresseActuelles = [];
+
+    function appliquerTheme(theme) {
+      var bouton = document.getElementById("themeToggle");
+
+      if (theme === "clair") {
+        document.body.classList.add("theme-clair");
+        if (bouton) bouton.textContent = "Thème sombre";
+      } else {
+        document.body.classList.remove("theme-clair");
+        if (bouton) bouton.textContent = "Thème clair";
+      }
+
+      localStorage.setItem("themeTelex", theme);
+    }
+
+    function basculerTheme() {
+      var themeActuel = document.body.classList.contains("theme-clair") ? "clair" : "sombre";
+      appliquerTheme(themeActuel === "clair" ? "sombre" : "clair");
+    }
+
+    function initialiserTheme() {
+      var themeEnregistre = localStorage.getItem("themeTelex") || "sombre";
+      appliquerTheme(themeEnregistre);
+    }
 
     function getValeur(id) {
       return document.getElementById(id).value.trim();
     }
 
+    function normaliserTexte(texte) {
+      return texte.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+    }
+
     function afficherMessage(texte, type) {
-      const message = document.getElementById("message");
+      var message = document.getElementById("message");
       message.textContent = texte;
       message.className = "message " + type;
     }
 
     function formatDate(dateIso) {
       if (!dateIso) return "";
-      const [annee, mois, jour] = dateIso.split("-");
-      return `${jour}/${mois}/${annee}`;
+      var morceaux = dateIso.split("-");
+      return morceaux[2] + "/" + morceaux[1] + "/" + morceaux[0];
+    }
+
+    function calculerDureeEnMinutes(heureDebut, heureFin) {
+      if (!heureDebut || !heureFin) return 0;
+      var debut = heureDebut.split(":").map(Number);
+      var fin = heureFin.split(":").map(Number);
+      var totalDebut = debut[0] * 60 + debut[1];
+      var totalFin = fin[0] * 60 + fin[1];
+      if (totalFin < totalDebut) totalFin += 24 * 60;
+      return totalFin - totalDebut;
+    }
+
+    function formaterDuree(minutesTotales, compact) {
+      var heures = Math.floor(minutesTotales / 60);
+      var minutes = minutesTotales % 60;
+      if (compact) return String(heures).padStart(2, "0") + "H" + String(minutes).padStart(2, "0");
+      return String(heures).padStart(2, "0") + " H " + String(minutes).padStart(2, "0");
+    }
+
+    function calculerDuree(heureDebut, heureFin) {
+      return formaterDuree(calculerDureeEnMinutes(heureDebut, heureFin), true);
+    }
+
+    function formaterHeureTexte(heure) {
+      return heure.replace(":", "H");
+    }
+
+    function creerLignesEffectifs() {
+      var container = document.getElementById("effectifsContainer");
+      if (!container) return;
+      container.innerHTML = "";
+
+      for (var i = 0; i < MAX_LIGNES_EFFECTIFS; i++) {
+        var ligne = document.createElement("div");
+        ligne.className = "effectif-line" + (i === 0 ? "" : " masque");
+
+        var blocType = document.createElement("div");
+        blocType.className = "suggestion-wrapper";
+
+        var labelType = document.createElement("label");
+        labelType.htmlFor = "effectifType" + i;
+        labelType.textContent = "Type d'effectif " + (i + 1);
+
+        var inputType = document.createElement("input");
+        inputType.type = "text";
+        inputType.id = "effectifType" + i;
+        inputType.className = "effectif-type" + (i === 0 ? " champ-vide" : "");
+        inputType.placeholder = "Ex. : ELI, SDRT, CDI, BMSRD...";
+        inputType.autocomplete = "off";
+
+        var suggestions = document.createElement("div");
+        suggestions.className = "suggestions-effectifs";
+
+        blocType.appendChild(labelType);
+        blocType.appendChild(inputType);
+        blocType.appendChild(suggestions);
+
+        var blocNombre = document.createElement("div");
+
+        var labelNombre = document.createElement("label");
+        labelNombre.htmlFor = "effectifNombre" + i;
+        labelNombre.textContent = "Nombre";
+
+        var inputNombre = document.createElement("input");
+        inputNombre.type = "number";
+        inputNombre.id = "effectifNombre" + i;
+        inputNombre.className = "effectif-nombre" + (i === 0 ? " champ-vide" : "");
+        inputNombre.min = "1";
+        inputNombre.step = "1";
+        inputNombre.placeholder = "Ex. : 12";
+
+        blocNombre.appendChild(labelNombre);
+        blocNombre.appendChild(inputNombre);
+        ligne.appendChild(blocType);
+        ligne.appendChild(blocNombre);
+        container.appendChild(ligne);
+      }
+
+      document.querySelectorAll(".effectif-type").forEach(function(champ) {
+        champ.addEventListener("input", function() {
+          champ.classList.remove("champ-erreur");
+          mettreAJourEtatChamp(champ);
+          afficherSuggestionsEffectifs(champ);
+          mettreAJourAffichageEffectifs();
+        });
+        champ.addEventListener("focus", function() { afficherSuggestionsEffectifs(champ); });
+        champ.addEventListener("keydown", function(event) { gererClavierSuggestionsEffectifs(event, champ); });
+      });
+
+      document.querySelectorAll(".effectif-nombre").forEach(function(champ) {
+        champ.addEventListener("input", function() {
+          champ.classList.remove("champ-erreur");
+          mettreAJourEtatChamp(champ);
+          mettreAJourAffichageEffectifs();
+        });
+      });
+    }
+
+    function trouverSuggestionsEffectifs(valeur) {
+      var recherche = normaliserTexte(valeur);
+      if (recherche.length === 0) return [];
+      return typesEffectifsReference.filter(function(type) {
+        var nomNormalise = normaliserTexte(type.nom);
+        var aliasOk = type.alias.some(function(alias) { return normaliserTexte(alias).includes(recherche); });
+        return nomNormalise.includes(recherche) || aliasOk;
+      });
+    }
+
+    function afficherSuggestionsEffectifs(champ) {
+      var blocSuggestions = champ.parentElement.querySelector(".suggestions-effectifs");
+      if (!blocSuggestions) return;
+      var suggestions = trouverSuggestionsEffectifs(champ.value);
+      blocSuggestions.innerHTML = "";
+      blocSuggestions.dataset.indexActif = "-1";
+      if (champ.value.trim().length === 0 || suggestions.length === 0) {
+        blocSuggestions.style.display = "none";
+        return;
+      }
+      suggestions.forEach(function(suggestion, index) {
+        var element = document.createElement("div");
+        element.className = "suggestion-effectif";
+        element.innerHTML = "<strong>" + suggestion.nom + "</strong>";
+        element.dataset.index = String(index);
+        element.addEventListener("mousedown", function(event) {
+          event.preventDefault();
+          champ.value = suggestion.nom;
+          mettreAJourEtatChamp(champ);
+          blocSuggestions.style.display = "none";
+          mettreAJourAffichageEffectifs();
+        });
+        blocSuggestions.appendChild(element);
+      });
+      blocSuggestions.style.display = "block";
+    }
+
+    function gererClavierSuggestionsEffectifs(event, champ) {
+      var blocSuggestions = champ.parentElement.querySelector(".suggestions-effectifs");
+      if (!blocSuggestions) return;
+      var elements = Array.from(blocSuggestions.querySelectorAll(".suggestion-effectif"));
+      if (blocSuggestions.style.display !== "block" || elements.length === 0) return;
+      var indexActif = Number(blocSuggestions.dataset.indexActif || -1);
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        indexActif = (indexActif + 1) % elements.length;
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        indexActif = (indexActif - 1 + elements.length) % elements.length;
+      } else if (event.key === "Enter" && indexActif >= 0) {
+        event.preventDefault();
+        champ.value = elements[indexActif].textContent.trim();
+        mettreAJourEtatChamp(champ);
+        blocSuggestions.style.display = "none";
+        mettreAJourAffichageEffectifs();
+        return;
+      } else if (event.key === "Escape") {
+        blocSuggestions.style.display = "none";
+        return;
+      } else {
+        return;
+      }
+      blocSuggestions.dataset.indexActif = String(indexActif);
+      elements.forEach(function(element, index) { element.classList.toggle("active", index === indexActif); });
+    }
+
+    function mettreAJourAffichageEffectifs() {
+      var lignes = Array.from(document.querySelectorAll(".effectif-line"));
+      lignes.forEach(function(ligne, index) {
+        if (index === 0) {
+          ligne.classList.remove("masque");
+          return;
+        }
+        var lignePrecedente = lignes[index - 1];
+        var typePrecedent = lignePrecedente.querySelector(".effectif-type").value.trim();
+        var nombrePrecedent = lignePrecedente.querySelector(".effectif-nombre").value.trim();
+        if (typePrecedent !== "" || nombrePrecedent !== "") ligne.classList.remove("masque");
+        else ligne.classList.add("masque");
+      });
+    }
+
+    function reinitialiserEffectifs() {
+      document.querySelectorAll(".effectif-type, .effectif-nombre").forEach(function(champ) {
+        champ.value = "";
+        champ.classList.remove("champ-erreur", "champ-valide", "champ-vide");
+      });
+      mettreAJourAffichageEffectifs();
+      mettreAJourTousLesEtatsChamps();
+    }
+
+    function obtenirReferenceEffectif(typeSaisi) {
+      var typeNormalise = normaliserTexte(typeSaisi);
+      return typesEffectifsReference.find(function(type) {
+        var nomNormalise = normaliserTexte(type.nom);
+        var aliasOk = type.alias.some(function(alias) { return normaliserTexte(alias) === typeNormalise; });
+        return nomNormalise === typeNormalise || aliasOk;
+      });
+    }
+
+    function obtenirOrdreEffectif(typeSaisi) {
+      var reference = obtenirReferenceEffectif(typeSaisi);
+      return reference ? reference.ordre : 999;
+    }
+
+    function getLignesEffectifs() {
+      var lignes = [];
+      var erreurs = [];
+      document.querySelectorAll(".effectif-line").forEach(function(ligne, index) {
+        var champType = ligne.querySelector(".effectif-type");
+        var champNombre = ligne.querySelector(".effectif-nombre");
+        var type = champType.value.trim();
+        var nombreTexte = champNombre.value.trim();
+        if (type === "" && nombreTexte === "") return;
+        if (type === "") {
+          champType.classList.add("champ-erreur");
+          erreurs.push("Type d'effectif ligne " + (index + 1));
+        }
+        if (nombreTexte === "") {
+          champNombre.classList.add("champ-erreur");
+          erreurs.push("Nombre d'effectifs ligne " + (index + 1));
+        }
+        var nombre = Number(nombreTexte);
+        if (nombreTexte !== "" && (!Number.isInteger(nombre) || nombre <= 0)) {
+          champNombre.classList.add("champ-erreur");
+          erreurs.push("Nombre d'effectifs ligne " + (index + 1) + " invalide");
+        }
+        if (type !== "" && nombreTexte !== "" && Number.isInteger(nombre) && nombre > 0) {
+          lignes.push({ type: type, nombre: nombre, ordre: obtenirOrdreEffectif(type), ordreSaisie: index, reference: obtenirReferenceEffectif(type) });
+        }
+      });
+      if (lignes.length === 0) {
+        var premiereLigne = document.querySelector(".effectif-line");
+        if (premiereLigne) {
+          premiereLigne.querySelector(".effectif-type").classList.add("champ-erreur");
+          premiereLigne.querySelector(".effectif-nombre").classList.add("champ-erreur");
+        }
+        erreurs.push("Effectifs - au moins une ligne complète");
+      }
+      lignes.sort(function(a, b) {
+        if (a.ordre !== b.ordre) return a.ordre - b.ordre;
+        return a.ordreSaisie - b.ordreSaisie;
+      });
+      return { lignes: lignes, erreurs: erreurs };
+    }
+
+    function mettreAJourEtatChamp(champ) {
+      if (!champ) return;
+      if (champ.classList.contains("champ-erreur")) return;
+
+      if (champ.value.trim() !== "") {
+        champ.classList.remove("champ-vide");
+        champ.classList.add("champ-valide");
+      } else {
+        champ.classList.remove("champ-valide");
+        champ.classList.add("champ-vide");
+      }
+    }
+
+    function mettreAJourTousLesEtatsChamps() {
+      champsObligatoires.forEach(function(id) {
+        mettreAJourEtatChamp(document.getElementById(id));
+      });
+      document.querySelectorAll(".effectif-line").forEach(function(ligne, index) {
+        var champType = ligne.querySelector(".effectif-type");
+        var champNombre = ligne.querySelector(".effectif-nombre");
+        var type = champType.value.trim();
+        var nombre = champNombre.value.trim();
+
+        if (index === 0 || type !== "" || nombre !== "") {
+          mettreAJourEtatChamp(champType);
+          mettreAJourEtatChamp(champNombre);
+        } else {
+          champType.classList.remove("champ-vide", "champ-valide", "champ-erreur");
+          champNombre.classList.remove("champ-vide", "champ-valide", "champ-erreur");
+        }
+      });
+    }
+
+    function nettoyerErreursChamps() {
+      champsObligatoires.forEach(function(id) {
+        var champ = document.getElementById(id);
+        if (champ) champ.classList.remove("champ-erreur");
+      });
+      document.querySelectorAll(".effectif-type, .effectif-nombre").forEach(function(champ) {
+        champ.classList.remove("champ-erreur");
+      });
     }
 
     function verifierChampsObligatoires() {
-      const champsManquants = champsObligatoires.filter(id => getValeur(id) === "");
-
-      if (champsManquants.length > 0) {
-        afficherMessage("Tous les champs obligatoires doivent être renseignés.", "error");
+      nettoyerErreursChamps();
+      var champsManquants = champsObligatoires.filter(function(id) { return getValeur(id) === ""; });
+      var controleEffectifs = getLignesEffectifs();
+      if (champsManquants.length > 0 || controleEffectifs.erreurs.length > 0) {
+        champsManquants.forEach(function(id) {
+          document.getElementById(id).classList.add("champ-erreur");
+        });
+        var listeChamps = champsManquants.map(function(id) { return libellesChamps[id] || id; }).concat(controleEffectifs.erreurs).join(", ");
+        afficherMessage("Champs obligatoires manquants ou invalides : " + listeChamps + ".", "error");
+        var premierChampErreur = document.querySelector(".champ-erreur");
+        if (premierChampErreur) premierChampErreur.focus();
         return false;
       }
-
       return true;
+    }
+
+    function genererTexteEffectifs(dureeServiceOrdreMinutes) {
+      var effectifs = getLignesEffectifs().lignes;
+      var totalEffectifs = 0;
+      var totalMinutesHF = 0;
+      var lignesCalculees = effectifs.map(function(effectif) {
+        var minutesHF = dureeServiceOrdreMinutes * effectif.nombre;
+        totalEffectifs += effectif.nombre;
+        totalMinutesHF += minutesHF;
+        return { type: effectif.type, nombre: String(effectif.nombre), hf: formaterDuree(minutesHF, true) };
+      });
+      var longueurMaxType = Math.max.apply(null, lignesCalculees.map(function(ligne) { return ligne.type.length; }).concat([10]));
+      var longueurMaxNombre = Math.max.apply(null, lignesCalculees.map(function(ligne) { return ligne.nombre.length; }).concat([String(totalEffectifs).length]));
+      var totalHFBrut = formaterDuree(totalMinutesHF, true);
+      var longueurMaxHF = Math.max.apply(null, lignesCalculees.map(function(ligne) { return ligne.hf.length; }).concat([totalHFBrut.length]));
+      var colonneValeurs = Math.max(55, longueurMaxType + 8);
+      var lignesTexte = lignesCalculees.map(function(ligne) {
+        var points = ".".repeat(Math.max(3, colonneValeurs - ligne.type.length));
+        var nombreAligne = ligne.nombre.padStart(longueurMaxNombre, " ");
+        var hfAligne = ligne.hf.padStart(longueurMaxHF, " ");
+        return ligne.type + " " + points + " " + nombreAligne + " - H/F " + hfAligne;
+      });
+      lignesTexte.push("");
+      lignesTexte.push("TOTAL : " + String(totalEffectifs).padStart(longueurMaxNombre, " ") + " - H/F " + totalHFBrut.padStart(longueurMaxHF, " "));
+      return lignesTexte.join("\n");
+    }
+
+    function genererTexteEmploiEffectifs() {
+      var effectifs = getLignesEffectifs().lignes;
+      var longueurMaxType = Math.max.apply(null, effectifs.map(function(effectif) { return effectif.type.length; }).concat([0]));
+      return effectifs.map(function(effectif) {
+        var emploi = effectif.reference ? effectif.reference.emploi : "##############################################";
+        var typeAligne = effectif.type.padEnd(longueurMaxType, " ");
+        return "- " + typeAligne + " : " + emploi;
+      }).join("\n");
     }
 
     function genererTelex() {
       if (!verifierChampsObligatoires()) return;
-
-      const dateEvenement = formatDate(getValeur("dateEvenement"));
-      const heureEvenement = getValeur("heureEvenement");
-      const lieuEvenement = getValeur("lieuEvenement");
-      const typeEvenement = getValeur("typeEvenement");
-      const personnesConcernees = getValeur("personnesConcernees");
-      const faitsConstates = getValeur("faitsConstates");
-      const actionsMenees = getValeur("actionsMenees");
-      const suiteDonnee = getValeur("suiteDonnee");
-
-      const telex = `DATE : ${dateEvenement}\nHEURE : ${heureEvenement}\nLIEU : ${lieuEvenement}\nTYPE D'EVENEMENT : ${typeEvenement}\nPERSONNES CONCERNEES : ${personnesConcernees}\nFAITS CONSTATES : ${faitsConstates}\nACTIONS MENEES : ${actionsMenees}\nSUITE DONNEE : ${suiteDonnee}`;
-
+      var objetTelex = getValeur("objetTelex");
+      var dateEvenement = formatDate(getValeur("dateEvenement"));
+      var lieuEvenement = getValeur("lieuEvenement");
+      var precisionLieu = getValeur("precisionLieu");
+      var lieuComplet = precisionLieu ? lieuEvenement + " - " + precisionLieu : lieuEvenement;
+      var circonstancesEvenement = getValeur("circonstancesEvenement");
+      var typeEvenement = getValeur("typeEvenement");
+      var heureDebut = getValeur("heureDebut");
+      var heureFin = getValeur("heureFin");
+      var dureeServiceOrdre = calculerDuree(heureDebut, heureFin);
+      var dureeServiceOrdreMinutes = calculerDureeEnMinutes(heureDebut, heureFin);
+      var organisateur = getValeur("organisateur");
+      var effectifsNombre = genererTexteEffectifs(dureeServiceOrdreMinutes);
+      var emploiEffectifs = genererTexteEmploiEffectifs();
+      var participantsManifestation = getValeur("participantsManifestation");
+      var contentieuxOperation = getValeur("contentieuxOperation");
+      var comportementUnites = getValeur("comportementUnites");
+      var observationsMateriel = getValeur("observationsMateriel");
+      var redacteurTelex = getValeur("redacteurTelex");
+      document.getElementById("emploiEffectifs").value = emploiEffectifs;
+      var telex = "OBJET : " + objetTelex + "\n\n\n" +
+        "1. DATE ET LIEU\n" + dateEvenement + " - " + lieuComplet + "\n\n\n" +
+        "2. CIRCONSTANCES MOTIVANT L'ÉVÉNEMENT\n" + circonstancesEvenement + "\n\n\n" +
+        "3. TYPE D'ÉVÉNEMENT\n" + typeEvenement + "\n\n\n" +
+        "4. HEURE DE DÉBUT ET DE FIN DE L'ÉVÉNEMENT\nDE " + formaterHeureTexte(heureDebut) + " À " + formaterHeureTexte(heureFin) + "\n\n\n" +
+        "5. ORGANISATEUR\n" + organisateur + "\n\n\n" +
+        "6. DURÉE TOTALE DU SERVICE D'ORDRE\n" + dureeServiceOrdre + "\n\n\n" +
+        "7. EFFECTIFS - NOMBRE DE FONCTIONNAIRES - H/F\n" + effectifsNombre + "\n\n\n" +
+        "8. EMPLOI DES EFFECTIFS PAR CATÉGORIE\n" + emploiEffectifs + "\n\n\n" +
+        "9. NOMBRE DE MANIFESTANTS\n" + participantsManifestation + "\n\n\n" +
+        "10. CONTENTIEUX DE L'OPÉRATION\n" + contentieuxOperation + "\n\n\n" +
+        "11. COMPORTEMENT DES UNITÉS ENGAGÉES\n" + comportementUnites + "\n\n\n" +
+        "12. OBSERVATIONS CONCERNANT LE MATÉRIEL\n" + observationsMateriel + "\n\n\n" +
+        "RÉDACTEUR : " + redacteurTelex;
       document.getElementById("resultat").value = telex.toUpperCase();
       afficherMessage("Télex généré.", "success");
     }
 
     async function copierTelex() {
-      const resultat = document.getElementById("resultat").value;
-
+      var resultat = document.getElementById("resultat").value;
       if (!resultat.trim()) {
         afficherMessage("Aucun télex à copier.", "error");
         return;
       }
-
       try {
         await navigator.clipboard.writeText(resultat);
         afficherMessage("Texte copié dans le presse-papiers.", "success");
@@ -315,25 +936,169 @@
     }
 
     function reinitialiserFormulaire() {
-      champsObligatoires.forEach(id => {
-        document.getElementById(id).value = "";
-      });
-
+      champsObligatoires.forEach(function(id) { document.getElementById(id).value = valeursParDefaut[id] || ""; });
+      document.getElementById("precisionLieu").value = "";
+      document.getElementById("emploiEffectifs").value = "";
       document.getElementById("resultat").value = "";
+      reinitialiserEffectifs();
+      nettoyerErreursChamps();
+      remplirDateDuJour();
+      masquerSuggestionsAdresse();
       afficherMessage("Formulaire réinitialisé.", "success");
     }
 
-    function remplirDateHeure() {
-      const maintenant = new Date();
-      const annee = maintenant.getFullYear();
-      const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
-      const jour = String(maintenant.getDate()).padStart(2, "0");
-      const heures = String(maintenant.getHours()).padStart(2, "0");
-      const minutes = String(maintenant.getMinutes()).padStart(2, "0");
+    function getDateHeureActuelles() {
+      var maintenant = new Date();
+      var annee = maintenant.getFullYear();
+      var mois = String(maintenant.getMonth() + 1).padStart(2, "0");
+      var jour = String(maintenant.getDate()).padStart(2, "0");
+      var heures = String(maintenant.getHours()).padStart(2, "0");
+      var minutes = String(maintenant.getMinutes()).padStart(2, "0");
+      return { date: annee + "-" + mois + "-" + jour, heure: heures + ":" + minutes };
+    }
 
-      document.getElementById("dateEvenement").value = `${annee}-${mois}-${jour}`;
-      document.getElementById("heureEvenement").value = `${heures}:${minutes}`;
-      afficherMessage("Date et heure actuelles renseignées.", "success");
+    function remplirDateDuJour() {
+      var dateHeure = getDateHeureActuelles();
+      var champDate = document.getElementById("dateEvenement");
+      champDate.value = dateHeure.date;
+      mettreAJourEtatChamp(champDate);
+    }
+
+    function remplirDateHeure() {
+      var dateHeure = getDateHeureActuelles();
+      document.getElementById("dateEvenement").value = dateHeure.date;
+      document.getElementById("heureDebut").value = dateHeure.heure;
+      mettreAJourEtatChamp(document.getElementById("heureDebut"));
+      afficherMessage("Date actuelle et heure de début actuelle renseignées.", "success");
+    }
+
+    function masquerSuggestionsAdresse() {
+      var blocSuggestionsAdresse = document.getElementById("suggestionsAdresse");
+      if (!blocSuggestionsAdresse) return;
+      blocSuggestionsAdresse.style.display = "none";
+      blocSuggestionsAdresse.innerHTML = "";
+      suggestionsAdresseActuelles = [];
+      indexSuggestionAdresseActive = -1;
+    }
+
+    function afficherSuggestionsAdresse(suggestions) {
+      var blocSuggestionsAdresse = document.getElementById("suggestionsAdresse");
+      if (!blocSuggestionsAdresse) return;
+      blocSuggestionsAdresse.innerHTML = "";
+      suggestionsAdresseActuelles = suggestions;
+      indexSuggestionAdresseActive = -1;
+      if (suggestions.length === 0) {
+        blocSuggestionsAdresse.innerHTML = '<div class="suggestion-vide">Aucune adresse trouvée</div>';
+        blocSuggestionsAdresse.style.display = "block";
+        return;
+      }
+      suggestions.forEach(function(suggestion, index) {
+        var element = document.createElement("div");
+        element.className = "suggestion-adresse";
+        element.textContent = suggestion.fulltext || "Adresse sans libellé";
+        element.addEventListener("mousedown", function(event) {
+          event.preventDefault();
+          selectionnerSuggestionAdresse(index);
+        });
+        blocSuggestionsAdresse.appendChild(element);
+      });
+      blocSuggestionsAdresse.style.display = "block";
+    }
+
+    function selectionnerSuggestionAdresse(index) {
+      var suggestion = suggestionsAdresseActuelles[index];
+      var inputAdresse = document.getElementById("lieuEvenement");
+      if (!suggestion || !inputAdresse) return;
+      inputAdresse.value = suggestion.fulltext || inputAdresse.value;
+      masquerSuggestionsAdresse();
+    }
+
+    function mettreAJourSuggestionAdresseActive() {
+      var blocSuggestionsAdresse = document.getElementById("suggestionsAdresse");
+      if (!blocSuggestionsAdresse) return;
+      var elements = blocSuggestionsAdresse.querySelectorAll(".suggestion-adresse");
+      elements.forEach(function(element, index) { element.classList.toggle("active", index === indexSuggestionAdresseActive); });
+    }
+
+    async function rechercherAdresses(texteRecherche) {
+      var requete = texteRecherche.trim();
+      if (requete.length < 3) {
+        masquerSuggestionsAdresse();
+        return;
+      }
+      var url = "https://data.geopf.fr/geocodage/completion/?text=" + encodeURIComponent(requete) + "&terr=69&type=StreetAddress&maximumResponses=6";
+      try {
+        var reponse = await fetch(url);
+        if (!reponse.ok) throw new Error("Erreur API adresse");
+        var donnees = await reponse.json();
+        afficherSuggestionsAdresse(donnees.results || []);
+      } catch (error) {
+        var blocSuggestionsAdresse = document.getElementById("suggestionsAdresse");
+        if (!blocSuggestionsAdresse) return;
+        blocSuggestionsAdresse.innerHTML = '<div class="suggestion-vide">Suggestions indisponibles</div>';
+        blocSuggestionsAdresse.style.display = "block";
+      }
+    }
+
+    function initialiserApplication() {
+      initialiserTheme();
+      creerLignesEffectifs();
+      remplirDateDuJour();
+      var inputAdresse = document.getElementById("lieuEvenement");
+      if (inputAdresse) {
+        inputAdresse.addEventListener("input", function() {
+          inputAdresse.classList.remove("champ-erreur");
+          clearTimeout(delaiRechercheAdresse);
+          delaiRechercheAdresse = setTimeout(function() { rechercherAdresses(inputAdresse.value); }, 350);
+        });
+        inputAdresse.addEventListener("keydown", function(event) {
+          var blocSuggestionsAdresse = document.getElementById("suggestionsAdresse");
+          var suggestionsVisibles = blocSuggestionsAdresse && blocSuggestionsAdresse.style.display === "block";
+          var nombreSuggestions = suggestionsAdresseActuelles.length;
+          if (!suggestionsVisibles || nombreSuggestions === 0) return;
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            indexSuggestionAdresseActive = (indexSuggestionAdresseActive + 1) % nombreSuggestions;
+            mettreAJourSuggestionAdresseActive();
+          }
+          if (event.key === "ArrowUp") {
+            event.preventDefault();
+            indexSuggestionAdresseActive = (indexSuggestionAdresseActive - 1 + nombreSuggestions) % nombreSuggestions;
+            mettreAJourSuggestionAdresseActive();
+          }
+          if (event.key === "Enter" && indexSuggestionAdresseActive >= 0) {
+            event.preventDefault();
+            selectionnerSuggestionAdresse(indexSuggestionAdresseActive);
+          }
+          if (event.key === "Escape") masquerSuggestionsAdresse();
+        });
+      }
+      champsObligatoires.forEach(function(id) {
+        var champ = document.getElementById(id);
+        if (!champ) return;
+        champ.addEventListener("input", function() {
+          if (getValeur(id) !== "") champ.classList.remove("champ-erreur");
+          mettreAJourEtatChamp(champ);
+        });
+        champ.addEventListener("change", function() {
+          if (getValeur(id) !== "") champ.classList.remove("champ-erreur");
+          mettreAJourEtatChamp(champ);
+        });
+      });
+      mettreAJourTousLesEtatsChamps();
+
+      document.addEventListener("click", function(event) {
+        if (!event.target.closest(".adresse-wrapper")) masquerSuggestionsAdresse();
+        if (!event.target.closest(".suggestion-wrapper")) {
+          document.querySelectorAll(".suggestions-effectifs").forEach(function(bloc) { bloc.style.display = "none"; });
+        }
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initialiserApplication);
+    } else {
+      initialiserApplication();
     }
   </script>
 </body>

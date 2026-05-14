@@ -166,6 +166,10 @@
       min-height: 42px;
     }
 
+    textarea.grand-champ {
+      min-height: 200px;
+    }
+
     .effectifs-container {
       display: flex;
       flex-direction: column;
@@ -309,6 +313,11 @@
       margin-top: 4px;
     }
 
+    .hint-lieu {
+      font-style: italic;
+      margin-left: 10px;
+    }
+
     @media (max-width: 850px) {
       .layout,
       .field-grid,
@@ -323,24 +332,15 @@
     <header>
       <div>
         <h1>Générateur de télex</h1>
-        <p class="subtitle">Version de travail. Le rendu final est généré en texte brut et en majuscules.</p>
       </div>
       <button class="btn-secondary theme-toggle" type="button" onclick="basculerTheme()" id="themeToggle">Thème clair</button>
     </header>
 
     <section class="layout">
       <div class="card">
-        <h2>Saisie des informations</h2>
-
-        <div class="actions">
-          <button class="btn-secondary" type="button" onclick="remplirDateHeure()">Date / heure actuelles</button>
-          <button class="btn-primary" type="button" onclick="genererTelex()">Générer le télex</button>
-          <button class="btn-danger" type="button" onclick="reinitialiserFormulaire()">Réinitialiser</button>
-        </div>
-
         <div class="field">
           <label for="objetTelex">Objet *</label>
-          <textarea id="objetTelex" placeholder="Objet du télex."></textarea>
+          <textarea id="objetTelex" class="compact" rows="1" placeholder="Objet du télex."></textarea>
         </div>
 
         <div class="field">
@@ -357,7 +357,7 @@
         <div class="field">
           <label for="precisionLieu">Précision sur le lieu</label>
           <input type="text" id="precisionLieu" placeholder="Ex. : TJ Lyon, Rectorat, ARS..." />
-          <p class="hint">Champ facultatif. Si renseigné, il sera ajouté après l'adresse dans le télex final.</p>
+          <p class="hint hint-lieu">Facultatif : ajouté après l’adresse dans le télex.</p>
         </div>
 
         <div class="field">
@@ -367,7 +367,7 @@
 
         <div class="field">
           <label for="typeEvenement">Type d'événement *</label>
-          <textarea id="typeEvenement" placeholder="Déroulé de l'événement"></textarea>
+          <textarea id="typeEvenement" class="grand-champ" placeholder="Déroulé de l'événement"></textarea>
         </div>
 
         <div class="field-grid">
@@ -419,15 +419,14 @@
           <label for="redacteurTelex">Rédacteur *</label>
           <select id="redacteurTelex">
             <option value="">Sélectionner un rédacteur</option>
-            <option value="Rédacteur 1">MAJOR VALGALIER</option>
-            <option value="Rédacteur 2">GPX ASTRUC</option>
-            <option value="Rédacteur 3">GPX MERCHADOU</option>
-            <option value="Rédacteur 4">GPX BAZIN</option>
+            <option value="MAJOR VALGALIER">MAJOR VALGALIER</option>
+            <option value="GPX ASTRUC">GPX ASTRUC</option>
+            <option value="GPX MERCHADOU">GPX MERCHADOU</option>
+            <option value="GPX BAZIN">GPX BAZIN</option>
           </select>
         </div>
 
         <div class="actions">
-          <button class="btn-secondary" type="button" onclick="remplirDateHeure()">Date / heure actuelles</button>
           <button class="btn-primary" type="button" onclick="genererTelex()">Générer le télex</button>
           <button class="btn-danger" type="button" onclick="reinitialiserFormulaire()">Réinitialiser</button>
         </div>
@@ -441,6 +440,7 @@
 
         <div class="actions">
           <button class="btn-success" type="button" onclick="copierTelex()">Copier le texte</button>
+          <button class="btn-primary" type="button" onclick="enregistrerTelex()">Enregistrer le télex</button>
         </div>
       </div>
     </section>
@@ -580,10 +580,6 @@
         var blocType = document.createElement("div");
         blocType.className = "suggestion-wrapper";
 
-        var labelType = document.createElement("label");
-        labelType.htmlFor = "effectifType" + i;
-        labelType.textContent = "Type d'effectif " + (i + 1);
-
         var inputType = document.createElement("input");
         inputType.type = "text";
         inputType.id = "effectifType" + i;
@@ -594,15 +590,10 @@
         var suggestions = document.createElement("div");
         suggestions.className = "suggestions-effectifs";
 
-        blocType.appendChild(labelType);
         blocType.appendChild(inputType);
         blocType.appendChild(suggestions);
 
         var blocNombre = document.createElement("div");
-
-        var labelNombre = document.createElement("label");
-        labelNombre.htmlFor = "effectifNombre" + i;
-        labelNombre.textContent = "Nombre";
 
         var inputNombre = document.createElement("input");
         inputNombre.type = "number";
@@ -610,9 +601,8 @@
         inputNombre.className = "effectif-nombre" + (i === 0 ? " champ-vide" : "");
         inputNombre.min = "1";
         inputNombre.step = "1";
-        inputNombre.placeholder = "Ex. : 12";
+        inputNombre.placeholder = "Nombre";
 
-        blocNombre.appendChild(labelNombre);
         blocNombre.appendChild(inputNombre);
         ligne.appendChild(blocType);
         ligne.appendChild(blocNombre);
@@ -835,8 +825,7 @@
         champsManquants.forEach(function(id) {
           document.getElementById(id).classList.add("champ-erreur");
         });
-        var listeChamps = champsManquants.map(function(id) { return libellesChamps[id] || id; }).concat(controleEffectifs.erreurs).join(", ");
-        afficherMessage("Champs obligatoires manquants ou invalides : " + listeChamps + ".", "error");
+        afficherMessage("Champs obligatoires manquants ou invalides.", "error");
         var premierChampErreur = document.querySelector(".champ-erreur");
         if (premierChampErreur) premierChampErreur.focus();
         return false;
@@ -858,12 +847,12 @@
       var longueurMaxNombre = Math.max.apply(null, lignesCalculees.map(function(ligne) { return ligne.nombre.length; }).concat([String(totalEffectifs).length]));
       var totalHFBrut = formaterDuree(totalMinutesHF, true);
       var longueurMaxHF = Math.max.apply(null, lignesCalculees.map(function(ligne) { return ligne.hf.length; }).concat([totalHFBrut.length]));
-      var colonneValeurs = Math.max(55, longueurMaxType + 8);
+      var colonneValeurs = Math.max(35, longueurMaxType + 8);
       var lignesTexte = lignesCalculees.map(function(ligne) {
         var points = ".".repeat(Math.max(3, colonneValeurs - ligne.type.length));
         var nombreAligne = ligne.nombre.padStart(longueurMaxNombre, " ");
         var hfAligne = ligne.hf.padStart(longueurMaxHF, " ");
-        return ligne.type + " " + points + " " + nombreAligne + " - H/F " + hfAligne;
+        return "- " + ligne.type + " " + points + " " + nombreAligne + " - H/F " + hfAligne;
       });
       lignesTexte.push("");
       lignesTexte.push("TOTAL : " + String(totalEffectifs).padStart(longueurMaxNombre, " ") + " - H/F " + totalHFBrut.padStart(longueurMaxHF, " "));
@@ -933,6 +922,61 @@
         document.getElementById("resultat").select();
         afficherMessage("Copie automatique impossible. Le texte est sélectionné : utilise Ctrl + C.", "error");
       }
+    }
+
+    function nettoyerNomFichier(texte) {
+      var nom = texte.trim();
+      var resultat = "";
+      var interdits = String.fromCharCode(92, 47, 58, 42, 63, 34, 60, 62, 124);
+      var espacePrecedent = false;
+
+      for (var i = 0; i < nom.length; i++) {
+        var caractere = nom.charAt(i);
+
+        if (interdits.indexOf(caractere) !== -1) {
+          continue;
+        }
+
+        if (caractere === " " || caractere === String.fromCharCode(10) || caractere === String.fromCharCode(13) || caractere === String.fromCharCode(9)) {
+          if (!espacePrecedent) {
+            resultat += " ";
+            espacePrecedent = true;
+          }
+        } else {
+          resultat += caractere;
+          espacePrecedent = false;
+        }
+      }
+
+      return resultat.trim().slice(0, 120);
+    }
+
+    function genererNomFichierTelex() {
+      var dateIso = getValeur("dateEvenement") || getDateHeureActuelles().date;
+      var objet = nettoyerNomFichier(getValeur("objetTelex")) || "TELEX";
+      return dateIso + " - " + objet + ".txt";
+    }
+
+    function enregistrerTelex() {
+      var contenu = document.getElementById("resultat").value;
+
+      if (!contenu.trim()) {
+        afficherMessage("Aucun télex à enregistrer.", "error");
+        return;
+      }
+
+      var fichier = new Blob([contenu], { type: "text/plain;charset=utf-8" });
+      var lien = document.createElement("a");
+      var url = URL.createObjectURL(fichier);
+
+      lien.href = url;
+      lien.download = genererNomFichierTelex();
+      document.body.appendChild(lien);
+      lien.click();
+      document.body.removeChild(lien);
+      URL.revokeObjectURL(url);
+
+      afficherMessage("Fichier texte généré.", "success");
     }
 
     function reinitialiserFormulaire() {

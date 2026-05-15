@@ -173,23 +173,63 @@
     .effectifs-container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .effectif-line {
       display: grid;
-      grid-template-columns: 1fr 160px;
+      grid-template-columns: 28px 1fr 120px;
       gap: 10px;
-      align-items: end;
+      align-items: center;
+      opacity: 0.45;
+      transition: opacity 0.15s ease, background 0.15s ease;
     }
 
-    .effectif-line.masque {
-      display: none;
+    .effectif-line.active {
+      opacity: 1;
     }
 
-    .effectif-line label {
-      font-size: 13px;
-      color: var(--muted);
+    .effectif-check {
+      width: 18px;
+      height: 18px;
+      justify-self: center;
+      cursor: pointer;
+      appearance: none;
+      border: 2px solid var(--muted);
+      border-radius: 50%;
+      background: transparent;
+      position: relative;
+    }
+
+    .effectif-check:checked {
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+
+    .effectif-check:checked::after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .effectif-label {
+      font-weight: bold;
+    }
+
+    .effectif-line input[type="number"]:disabled,
+    .effectif-line input[type="text"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .ajout-effectif {
+      margin-top: 8px;
+      align-self: flex-start;
     }
 
     .suggestions-adresse,
@@ -390,13 +430,14 @@
         <div class="field">
           <label>Effectifs - nombre de fonctionnaires - H/F *</label>
           <div id="effectifsContainer" class="effectifs-container"></div>
+          <button class="btn-secondary ajout-effectif" type="button" onclick="ajouterUniteNonListee()">+ Ajouter une unité non listée</button>
 
         </div>
 
         <input type="hidden" id="emploiEffectifs" />
 
         <div class="field">
-          <label for="participantsManifestation">Nombre de manifestants *</label>
+          <label for="participantsManifestation">Partcipants à l'événement *</label>
           <textarea id="participantsManifestation" class="compact" rows="1"></textarea>
         </div>
 
@@ -450,8 +491,8 @@
     var MAX_LIGNES_EFFECTIFS = 10;
 
     var typesEffectifsReference = [
+      { nom: "SDSP/ELI", emploi: "LIAISON MANIFESTANTS ET INFORMATION DU COMMANDEMENT", ordre: 2, cocheParDefaut: true, alias: ["eli", "sdsp eli", "sdsp/eli"] },
       { nom: "AUTORITÉS + CHAUFFEURS", emploi: "DSO", ordre: 1, alias: ["autorite", "autorites", "autorité", "autorités", "dso", "chauffeur", "chauffeurs"] },
-      { nom: "SDSP/ELI", emploi: "LIAISON ORGANISATEURS ET INFORMATION DU COMMANDEMENT", ordre: 2, alias: ["eli", "sdsp eli", "sdsp/eli"] },
       { nom: "SDSP/CDI", emploi: "SÉCURISATION DE L'ÉVÉNEMENT", ordre: 3, alias: ["cdi", "sdsp cdi", "sdsp/cdi"] },
       { nom: "SDSP/BMSRD", emploi: "GESTION CIRCULATION ET COUPURES SI NÉCESSAIRES", ordre: 4, alias: ["circulation", "motard", "motards", "bmsrd", "sdsp bmsrd", "sdsp/bmsrd"] },
       { nom: "SDRT", emploi: "PHYSIONOMIE ET COMPTAGE", ordre: 5, alias: ["rt", "sdrt", "renseignement", "renseignements"] }
@@ -488,7 +529,7 @@
       heureDebut: "Heure de début",
       heureFin: "Heure de fin",
       organisateur: "Organisateur",
-      participantsManifestation: "Nombre de manifestants",
+      participantsManifestation: "Participants à l'événement",
       contentieuxOperation: "Contentieux de l'opération",
       comportementUnites: "Comportement des unités engagées",
       observationsMateriel: "Observations concernant le matériel",
@@ -568,65 +609,166 @@
       return heure.replace(":", "H");
     }
 
+    function limiterLignesTexte(texte, longueurMax) {
+      var paragraphes = texte.split(String.fromCharCode(10));
+      var lignesFinales = [];
+
+      paragraphes.forEach(function(paragraphe) {
+        var mots = paragraphe.trim().split(" ").filter(function(mot) {
+          return mot.trim().length > 0;
+        });
+
+        var ligne = "";
+
+        mots.forEach(function(mot) {
+          if (ligne === "") {
+            ligne = mot;
+          } else if ((ligne + " " + mot).length <= longueurMax) {
+            ligne = ligne + " " + mot;
+          } else {
+            lignesFinales.push(ligne);
+            ligne = mot;
+          }
+        });
+
+        if (ligne !== "") {
+          lignesFinales.push(ligne);
+        }
+      });
+
+      return lignesFinales.join(String.fromCharCode(10));
+    }
+
     function creerLignesEffectifs() {
       var container = document.getElementById("effectifsContainer");
       if (!container) return;
       container.innerHTML = "";
 
-      for (var i = 0; i < MAX_LIGNES_EFFECTIFS; i++) {
-        var ligne = document.createElement("div");
-        ligne.className = "effectif-line" + (i === 0 ? "" : " masque");
+      typesEffectifsReference.forEach(function(effectif, index) {
+        container.appendChild(creerLigneEffectifStandard(effectif, index));
+      });
+    }
 
-        var blocType = document.createElement("div");
-        blocType.className = "suggestion-wrapper";
+    function creerLigneEffectifStandard(effectif, index) {
+      var ligne = document.createElement("div");
+      ligne.className = "effectif-line";
+      ligne.dataset.type = "standard";
+      ligne.dataset.nom = effectif.nom;
+      ligne.dataset.ordre = String(effectif.ordre);
 
-        var inputType = document.createElement("input");
-        inputType.type = "text";
-        inputType.id = "effectifType" + i;
-        inputType.className = "effectif-type" + (i === 0 ? " champ-vide" : "");
-        inputType.placeholder = "Ex. : ELI, SDRT, CDI, BMSRD...";
-        inputType.autocomplete = "off";
+      var checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "effectif-check";
+      checkbox.id = "effectifCheck" + index;
+      checkbox.checked = !!effectif.cocheParDefaut;
 
-        var suggestions = document.createElement("div");
-        suggestions.className = "suggestions-effectifs";
+      var inputType = document.createElement("input");
+      inputType.type = "text";
+      inputType.className = "effectif-type";
+      inputType.value = effectif.nom;
+      inputType.autocomplete = "off";
 
-        blocType.appendChild(inputType);
-        blocType.appendChild(suggestions);
+      var inputNombre = document.createElement("input");
+      inputNombre.type = "number";
+      inputNombre.className = "effectif-nombre";
+      inputNombre.min = "1";
+      inputNombre.step = "1";
+      inputNombre.placeholder = "Nombre";
+      inputNombre.disabled = !effectif.cocheParDefaut;
 
-        var blocNombre = document.createElement("div");
+      checkbox.addEventListener("change", function() {
+        basculerLigneEffectif(ligne);
+      });
 
-        var inputNombre = document.createElement("input");
-        inputNombre.type = "number";
-        inputNombre.id = "effectifNombre" + i;
-        inputNombre.className = "effectif-nombre" + (i === 0 ? " champ-vide" : "");
-        inputNombre.min = "1";
-        inputNombre.step = "1";
-        inputNombre.placeholder = "Nombre";
+      inputType.addEventListener("input", function() {
+        inputType.classList.remove("champ-erreur");
+        if (checkbox.checked) mettreAJourEtatChamp(inputType);
+      });
 
-        blocNombre.appendChild(inputNombre);
-        ligne.appendChild(blocType);
-        ligne.appendChild(blocNombre);
-        container.appendChild(ligne);
+      inputNombre.addEventListener("input", function() {
+        inputNombre.classList.remove("champ-erreur");
+        mettreAJourEtatChamp(inputNombre);
+      });
+
+      if (effectif.cocheParDefaut) {
+        ligne.classList.add("active");
+        inputNombre.classList.add("champ-vide");
       }
 
-      document.querySelectorAll(".effectif-type").forEach(function(champ) {
-        champ.addEventListener("input", function() {
-          champ.classList.remove("champ-erreur");
-          mettreAJourEtatChamp(champ);
-          afficherSuggestionsEffectifs(champ);
-          mettreAJourAffichageEffectifs();
-        });
-        champ.addEventListener("focus", function() { afficherSuggestionsEffectifs(champ); });
-        champ.addEventListener("keydown", function(event) { gererClavierSuggestionsEffectifs(event, champ); });
+      ligne.appendChild(checkbox);
+      ligne.appendChild(inputType);
+      ligne.appendChild(inputNombre);
+
+      return ligne;
+    }
+
+    function creerLigneEffectifManuel() {
+      var container = document.getElementById("effectifsContainer");
+      var ligne = document.createElement("div");
+      ligne.className = "effectif-line active";
+      ligne.dataset.type = "manuel";
+      ligne.dataset.ordre = "999";
+
+      var checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "effectif-check";
+      checkbox.checked = true;
+
+      var inputNom = document.createElement("input");
+      inputNom.type = "text";
+      inputNom.className = "effectif-type champ-vide";
+      inputNom.placeholder = "Unité non listée";
+      inputNom.autocomplete = "off";
+
+      var inputNombre = document.createElement("input");
+      inputNombre.type = "number";
+      inputNombre.className = "effectif-nombre champ-vide";
+      inputNombre.min = "1";
+      inputNombre.step = "1";
+      inputNombre.placeholder = "Nombre";
+
+      checkbox.addEventListener("change", function() {
+        if (!checkbox.checked) {
+          ligne.remove();
+        }
       });
 
-      document.querySelectorAll(".effectif-nombre").forEach(function(champ) {
-        champ.addEventListener("input", function() {
-          champ.classList.remove("champ-erreur");
-          mettreAJourEtatChamp(champ);
-          mettreAJourAffichageEffectifs();
-        });
+      inputNom.addEventListener("input", function() {
+        inputNom.classList.remove("champ-erreur");
+        mettreAJourEtatChamp(inputNom);
       });
+
+      inputNombre.addEventListener("input", function() {
+        inputNombre.classList.remove("champ-erreur");
+        mettreAJourEtatChamp(inputNombre);
+      });
+
+      ligne.appendChild(checkbox);
+      ligne.appendChild(inputNom);
+      ligne.appendChild(inputNombre);
+      container.appendChild(ligne);
+      inputNom.focus();
+    }
+
+    function ajouterUniteNonListee() {
+      creerLigneEffectifManuel();
+    }
+
+    function basculerLigneEffectif(ligne) {
+      var checkbox = ligne.querySelector(".effectif-check");
+      var inputNombre = ligne.querySelector(".effectif-nombre");
+
+      if (checkbox.checked) {
+        ligne.classList.add("active");
+        inputNombre.disabled = false;
+        mettreAJourEtatChamp(inputNombre);
+        inputNombre.focus();
+      } else {
+        ligne.classList.remove("active");
+        inputNombre.value = "";
+        inputNombre.disabled = true;
+        inputNombre.classList.remove("champ-vide", "champ-valide", "champ-erreur");
+      }
     }
 
     function trouverSuggestionsEffectifs(valeur) {
@@ -696,27 +838,30 @@
     }
 
     function mettreAJourAffichageEffectifs() {
-      var lignes = Array.from(document.querySelectorAll(".effectif-line"));
-      lignes.forEach(function(ligne, index) {
-        if (index === 0) {
-          ligne.classList.remove("masque");
-          return;
-        }
-        var lignePrecedente = lignes[index - 1];
-        var typePrecedent = lignePrecedente.querySelector(".effectif-type").value.trim();
-        var nombrePrecedent = lignePrecedente.querySelector(".effectif-nombre").value.trim();
-        if (typePrecedent !== "" || nombrePrecedent !== "") ligne.classList.remove("masque");
-        else ligne.classList.add("masque");
-      });
+      // Fonction conservée pour compatibilité avec le reste du script.
     }
 
     function reinitialiserEffectifs() {
-      document.querySelectorAll(".effectif-type, .effectif-nombre").forEach(function(champ) {
-        champ.value = "";
-        champ.classList.remove("champ-erreur", "champ-valide", "champ-vide");
+      document.querySelectorAll(".effectif-line").forEach(function(ligne) {
+        var checkbox = ligne.querySelector(".effectif-check");
+        var inputNombre = ligne.querySelector(".effectif-nombre");
+
+        if (ligne.dataset.type === "manuel") {
+          ligne.remove();
+          return;
+        }
+
+        var inputType = ligne.querySelector(".effectif-type");
+        checkbox.checked = false;
+        ligne.classList.remove("active");
+        if (inputType) {
+          inputType.value = ligne.dataset.nom || inputType.value;
+          inputType.classList.remove("champ-erreur", "champ-valide", "champ-vide");
+        }
+        inputNombre.value = "";
+        inputNombre.disabled = true;
+        inputNombre.classList.remove("champ-erreur", "champ-valide", "champ-vide");
       });
-      mettreAJourAffichageEffectifs();
-      mettreAJourTousLesEtatsChamps();
     }
 
     function obtenirReferenceEffectif(typeSaisi) {
@@ -736,41 +881,53 @@
     function getLignesEffectifs() {
       var lignes = [];
       var erreurs = [];
+
       document.querySelectorAll(".effectif-line").forEach(function(ligne, index) {
+        var checkbox = ligne.querySelector(".effectif-check");
         var champType = ligne.querySelector(".effectif-type");
         var champNombre = ligne.querySelector(".effectif-nombre");
-        var type = champType.value.trim();
-        var nombreTexte = champNombre.value.trim();
-        if (type === "" && nombreTexte === "") return;
+
+        if (!checkbox || !checkbox.checked) return;
+
+        var type = champType ? champType.value.trim() : "";
+        var nombreTexte = champNombre ? champNombre.value.trim() : "";
+        var nombre = Number(nombreTexte);
+        var reference = obtenirReferenceEffectif(type);
+        var ordre = obtenirOrdreEffectif(type);
+
         if (type === "") {
-          champType.classList.add("champ-erreur");
+          if (champType) champType.classList.add("champ-erreur");
           erreurs.push("Type d'effectif ligne " + (index + 1));
         }
+
         if (nombreTexte === "") {
-          champNombre.classList.add("champ-erreur");
+          if (champNombre) champNombre.classList.add("champ-erreur");
           erreurs.push("Nombre d'effectifs ligne " + (index + 1));
-        }
-        var nombre = Number(nombreTexte);
-        if (nombreTexte !== "" && (!Number.isInteger(nombre) || nombre <= 0)) {
-          champNombre.classList.add("champ-erreur");
+        } else if (!Number.isInteger(nombre) || nombre <= 0) {
+          if (champNombre) champNombre.classList.add("champ-erreur");
           erreurs.push("Nombre d'effectifs ligne " + (index + 1) + " invalide");
         }
+
         if (type !== "" && nombreTexte !== "" && Number.isInteger(nombre) && nombre > 0) {
-          lignes.push({ type: type, nombre: nombre, ordre: obtenirOrdreEffectif(type), ordreSaisie: index, reference: obtenirReferenceEffectif(type) });
+          lignes.push({
+            type: type,
+            nombre: nombre,
+            ordre: ordre,
+            ordreSaisie: index,
+            reference: reference
+          });
         }
       });
+
       if (lignes.length === 0) {
-        var premiereLigne = document.querySelector(".effectif-line");
-        if (premiereLigne) {
-          premiereLigne.querySelector(".effectif-type").classList.add("champ-erreur");
-          premiereLigne.querySelector(".effectif-nombre").classList.add("champ-erreur");
-        }
         erreurs.push("Effectifs - au moins une ligne complète");
       }
+
       lignes.sort(function(a, b) {
         if (a.ordre !== b.ordre) return a.ordre - b.ordre;
         return a.ordreSaisie - b.ordreSaisie;
       });
+
       return { lignes: lignes, erreurs: erreurs };
     }
 
@@ -791,19 +948,20 @@
       champsObligatoires.forEach(function(id) {
         mettreAJourEtatChamp(document.getElementById(id));
       });
-      document.querySelectorAll(".effectif-line").forEach(function(ligne, index) {
+
+      document.querySelectorAll(".effectif-line").forEach(function(ligne) {
+        var checkbox = ligne.querySelector(".effectif-check");
         var champType = ligne.querySelector(".effectif-type");
         var champNombre = ligne.querySelector(".effectif-nombre");
-        var type = champType.value.trim();
-        var nombre = champNombre.value.trim();
 
-        if (index === 0 || type !== "" || nombre !== "") {
-          mettreAJourEtatChamp(champType);
-          mettreAJourEtatChamp(champNombre);
-        } else {
-          champType.classList.remove("champ-vide", "champ-valide", "champ-erreur");
-          champNombre.classList.remove("champ-vide", "champ-valide", "champ-erreur");
+        if (!checkbox || !checkbox.checked) {
+          if (champType) champType.classList.remove("champ-vide", "champ-valide", "champ-erreur");
+          if (champNombre) champNombre.classList.remove("champ-vide", "champ-valide", "champ-erreur");
+          return;
         }
+
+        if (champType) mettreAJourEtatChamp(champType);
+        if (champNombre) mettreAJourEtatChamp(champNombre);
       });
     }
 
@@ -871,13 +1029,17 @@
 
     function genererTelex() {
       if (!verifierChampsObligatoires()) return;
+
+      var nl = String.fromCharCode(10);
+      var sep = nl + nl + nl;
+
       var objetTelex = getValeur("objetTelex");
       var dateEvenement = formatDate(getValeur("dateEvenement"));
       var lieuEvenement = getValeur("lieuEvenement");
       var precisionLieu = getValeur("precisionLieu");
-      var lieuComplet = precisionLieu ? lieuEvenement + " - " + precisionLieu : lieuEvenement;
-      var circonstancesEvenement = getValeur("circonstancesEvenement");
-      var typeEvenement = getValeur("typeEvenement");
+      var lieuComplet = lieuEvenement + " (69)" + (precisionLieu ? " - " + precisionLieu : "");
+      var circonstancesEvenement = limiterLignesTexte(getValeur("circonstancesEvenement"), 75);
+      var typeEvenement = limiterLignesTexte(getValeur("typeEvenement"), 75);
       var heureDebut = getValeur("heureDebut");
       var heureFin = getValeur("heureFin");
       var dureeServiceOrdre = calculerDuree(heureDebut, heureFin);
@@ -890,22 +1052,27 @@
       var comportementUnites = getValeur("comportementUnites");
       var observationsMateriel = getValeur("observationsMateriel");
       var redacteurTelex = getValeur("redacteurTelex");
+
       document.getElementById("emploiEffectifs").value = emploiEffectifs;
-      var telex = "OBJET : " + objetTelex + "\n\n\n" +
-        "1. DATE ET LIEU\n" + dateEvenement + " - " + lieuComplet + "\n\n\n" +
-        "2. CIRCONSTANCES MOTIVANT L'ÉVÉNEMENT\n" + circonstancesEvenement + "\n\n\n" +
-        "3. TYPE D'ÉVÉNEMENT\n" + typeEvenement + "\n\n\n" +
-        "4. HEURE DE DÉBUT ET DE FIN DE L'ÉVÉNEMENT\nDE " + formaterHeureTexte(heureDebut) + " À " + formaterHeureTexte(heureFin) + "\n\n\n" +
-        "5. ORGANISATEUR\n" + organisateur + "\n\n\n" +
-        "6. DURÉE TOTALE DU SERVICE D'ORDRE\n" + dureeServiceOrdre + "\n\n\n" +
-        "7. EFFECTIFS - NOMBRE DE FONCTIONNAIRES - H/F\n" + effectifsNombre + "\n\n\n" +
-        "8. EMPLOI DES EFFECTIFS PAR CATÉGORIE\n" + emploiEffectifs + "\n\n\n" +
-        "9. NOMBRE DE MANIFESTANTS\n" + participantsManifestation + "\n\n\n" +
-        "10. CONTENTIEUX DE L'OPÉRATION\n" + contentieuxOperation + "\n\n\n" +
-        "11. COMPORTEMENT DES UNITÉS ENGAGÉES\n" + comportementUnites + "\n\n\n" +
-        "12. OBSERVATIONS CONCERNANT LE MATÉRIEL\n" + observationsMateriel + "\n\n\n" +
-        "RÉDACTEUR : " + redacteurTelex;
-      document.getElementById("resultat").value = telex.toUpperCase();
+
+      var blocs = [];
+      blocs.push("OBJET : " + objetTelex);
+      blocs.push("1. DATE ET LIEU" + nl + dateEvenement + " - " + lieuComplet);
+      blocs.push("2. CIRCONSTANCES MOTIVANT L'ÉVÉNEMENT" + nl + circonstancesEvenement);
+      blocs.push("3. TYPE D'ÉVÉNEMENT" + nl + typeEvenement);
+      blocs.push("4. HEURE DE DÉBUT ET DE FIN DE L'ÉVÉNEMENT" + nl + "DE " + formaterHeureTexte(heureDebut) + " À " + formaterHeureTexte(heureFin));
+      blocs.push("5. ORGANISATEUR" + nl + organisateur);
+      blocs.push("6. DURÉE TOTALE DU SERVICE D'ORDRE" + nl + dureeServiceOrdre);
+      blocs.push("7. EFFECTIFS - NOMBRE DE FONCTIONNAIRES - H/F" + nl + effectifsNombre);
+      blocs.push("8. EMPLOI DES EFFECTIFS PAR CATÉGORIE" + nl + emploiEffectifs);
+      blocs.push("9. PARTICIPANTS À L'ÉVÉNEMENT" + nl + participantsManifestation);
+      blocs.push("10. CONTENTIEUX DE L'OPÉRATION" + nl + contentieuxOperation);
+      blocs.push("11. COMPORTEMENT DES UNITÉS ENGAGÉES" + nl + comportementUnites);
+      blocs.push("12. OBSERVATIONS CONCERNANT LE MATÉRIEL" + nl + observationsMateriel);
+      blocs.push("RÉDACTEUR : " + redacteurTelex);
+      blocs.push("SIGNÉ: POUR L'INSPECTEUR GÉNÉRAL" + nl + "       DIRECTEUR INTERDÉPARTEMENTAL" + nl + "       DE LA POLICE NATIONALE DU RHÔNE," + nl + "       NELSON BOUARD");
+
+      document.getElementById("resultat").value = blocs.join(sep).toUpperCase();
       afficherMessage("Télex généré.", "success");
     }
 

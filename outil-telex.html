@@ -639,7 +639,7 @@
       "HEURE - Arrivée des manifestants",
       "HEURE - Prises de paroles",
       "HEURE - Appel à dispersion",
-      "HEURE - Dispersion totale et fin d'événement sans incident"
+      "HEURE - Dispersion totale - Fin d'événement"
     ].join(String.fromCharCode(10));
 
     var modeleTypeManifestation = [
@@ -650,7 +650,7 @@
       "Cheminement par ...",
       "HEURE - Arrivée du cortège - Lieu arrivée",
       "HEURE - Appel à dispersion",
-      "HEURE - Dispersion totale et fin d'événement sans incident"
+      "HEURE - Dispersion totale - Fin d'événement"
     ].join(String.fromCharCode(10));
 
     var valeursParDefaut = {
@@ -1280,7 +1280,7 @@
       });
 
       lignesTexte.push("");
-      lignesTexte.push("TOTAL : " + String(totalEffectifs).padStart(longueurMaxNombre, " ") + " - H/F " + totalHFBrut.padStart(longueurMaxHF, " "));
+      lignesTexte.push("  TOTAL : " + String(totalEffectifs).padStart(longueurMaxNombre, " ") + " - H/F " + totalHFBrut.padStart(longueurMaxHF, " "));
 
       return lignesTexte.join("\n");
     }

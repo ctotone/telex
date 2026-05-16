@@ -348,6 +348,15 @@
       color: var(--text);
     }
 
+    .btn-mail {
+      background: #ffd7005c;
+      color: var(--text);
+    }
+
+    .btn-mail:hover {
+      background: #ffd7008a;
+    }
+
     .btn-danger {
       background: #ef44449e;
       color: white;
@@ -377,6 +386,7 @@
       min-height: 620px;
       white-space: pre-wrap;
       font-family: Consolas, "Courier New", monospace;
+      font-size: 16px;
     }
 
     .message {
@@ -584,6 +594,7 @@
         <div class="actions">
           <button class="btn-success" type="button" onclick="copierTelex()">Copier le texte</button>
           <button class="btn-primary" type="button" onclick="enregistrerTelex()">Télécharger le télex</button>
+          <button class="btn-mail" type="button" onclick="envoyerTelexParMail()">Envoyer par mail</button>
         </div>
 
         <div id="messageResultat" class="message"></div>
@@ -1429,6 +1440,28 @@
       URL.revokeObjectURL(url);
 
       afficherMessageResultat("Fichier texte téléchargé.", "success");
+    }
+
+    function envoyerTelexParMail() {
+      var contenu = document.getElementById("resultat").value;
+
+      if (!contenu.trim()) {
+        afficherMessageResultat("Aucun télex à envoyer.", "error");
+        return;
+      }
+
+      var destinataire = "69dipn-dipn-lyon@rescom4g.interieur.gouv.fr";
+      var objet = nettoyerNomFichier(getValeur("objetTelex")) || "TELEX";
+      var lieu = nettoyerNomFichier(getValeur("lieuEvenement")) || "ADRESSE NON RENSEIGNÉE";
+      var sujet = objet + " - " + lieu;
+
+      var lienMail = "mailto:" + encodeURIComponent(destinataire)
+        + "?subject=" + encodeURIComponent(sujet.toUpperCase())
+        + "&body=" + encodeURIComponent(contenu);
+
+      window.location.href = lienMail;
+
+      afficherMessageResultat("Ouverture du logiciel de messagerie.", "success");
     }
 
     function reinitialiserFormulaire() {
